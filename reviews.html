@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Striker Marketplace Reviews/Vouches</title>
+  <style>
+    /* Reset default styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    header h1 {
+      font-size: 2.8em;
+      color: #008080;
+      text-shadow: 2px 2px #ddd;
+    }
+    
+    header p {
+      font-size: 1.2em;
+      color: #555;
+    }
+    
+    /* Reviews Section */
+    .reviews {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+    
+    .review-item {
+      background: #fff;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 10px;
+      width: calc(45% - 40px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .review-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .review-item h2 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      color: #444;
+    }
+    
+    .review-item p {
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    
+    .review-item .rating {
+      font-weight: bold;
+      color: #008080;
+    }
+    
+    .review-item img {
+      max-width: 100%;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    
+    /* Remove button (only visible in admin mode) */
+    .remove-btn {
+      background: #e74c3c;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      transition: background 0.3s;
+    }
+    
+    .remove-btn:hover {
+      background: #c0392b;
+    }
+    
+    /* Button Container */
+    .btn-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+    
+    .open-admin-btn, .back-btn {
+      background: #008080;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    .open-admin-btn:hover, .back-btn:hover {
+      background: #006666;
+    }
+    
+    /* Modal Styles (shared with the marketplace page) */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .modal-content {
+      background: #fff;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .close-modal {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #aaa;
+      transition: color 0.3s;
+    }
+    
+    .close-modal:hover {
+      color: #333;
+    }
+    
+    /* Admin Panel Form Styles */
+    .admin-panel h2 {
+      margin-bottom: 15px;
+      text-align: center;
+      color: #008080;
+    }
+    
+    .admin-form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    .admin-form input,
+    .admin-form textarea {
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+      width: calc(100% - 30px);
+      max-width: 300px;
+      transition: border-color 0.3s;
+    }
+    
+    .admin-form input:focus,
+    .admin-form textarea:focus {
+      border-color: #008080;
+      outline: none;
+    }
+    
+    .admin-form button {
+      background: #008080;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s;
+    }
+    
+    .admin-form button:hover {
+      background: #006666;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .review-item {
+        width: calc(90% - 40px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Striker Marketplace Reviews/Vouches</h1>
+    <p>Read what our community has to say.</p>
+  </header>
+  
+  <!-- Reviews Section -->
+  <section class="reviews" id="reviews"></section>
+  
+  <!-- Button Container for Admin Panel and Back -->
+  <div class="btn-container">
+    <button class="open-admin-btn" onclick="openAdminLogin()">Refferal Panel</button>
+    <button class="back-btn" onclick="location.href='index.html'">Back to Marketplace</button>
+ 
+  </div>
+<p>When You Recieve Your Items , An Email Is Sent To You Where You Can Leave A Review Kindly.</p>
+  
+  <!-- Admin Login Modal -->
+  <div class="modal" id="adminLoginModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeAdminLogin()">&times;</span>
+      <h2>Refferal Login</h2>
+      <form id="loginForm" class="admin-form" onsubmit="handleLogin(event)">
+        <input type="password" id="adminCode" placeholder="Enter Refferal Code" required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Admin Panel Modal for Adding Reviews/Vouches -->
+  <div class="modal" id="adminPanelModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeAdminPanel()">&times;</span>
+      <div class="admin-panel">
+        <h2>Admin Panel - Add Review/Vouch</h2>
+        <form id="adminForm" class="admin-form" onsubmit="addReview(event)">
+          <input type="text" id="reviewerName" placeholder="Reviewer Name" required />
+          <textarea id="reviewText" rows="3" placeholder="Review/Vouch Text" required></textarea>
+          <input type="number" id="reviewRating" placeholder="Rating (1-5)" required min="1" max="5" />
+          <input type="url" id="reviewImage" placeholder="Image URL (optional)" />
+          <button type="submit">Add Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Global reviews array and admin flag
+    let reviews = [];
+    let isAdmin = false;
+    const ADMIN_CODE = "150411";
+    
+    // Load reviews from localStorage on page load
+    function loadReviews() {
+      const savedReviews = localStorage.getItem("reviews");
+      if (savedReviews) {
+        reviews = JSON.parse(savedReviews);
+      }
+      renderReviews();
+    }
+    
+    // Save reviews to localStorage
+    function saveReviews() {
+      localStorage.setItem("reviews", JSON.stringify(reviews));
+    }
+    
+    // Render all reviews. The remove button appears only if isAdmin is true.
+    function renderReviews() {
+      const reviewsContainer = document.getElementById("reviews");
+      reviewsContainer.innerHTML = "";
+      
+      reviews.forEach(review => {
+        const reviewDiv = document.createElement("div");
+        reviewDiv.className = "review-item";
+        reviewDiv.setAttribute("data-id", review.id);
+        
+        let html = "";
+        if (isAdmin) {
+          html += `<button class="remove-btn" onclick="removeReview(${review.id})">X</button>`;
+        }
+        html += `<h2>${review.reviewerName}</h2>`;
+        // If an image URL is provided, display the image.
+        if (review.reviewImage) {
+          html += `<img src="${review.reviewImage}" alt="Review Image">`;
+        }
+        html += `
+          <p>${review.reviewText}</p>
+          <p class="rating">Rating: ${review.reviewRating}/5</p>
+        `;
+        reviewDiv.innerHTML = html;
+        reviewsContainer.appendChild(reviewDiv);
+      });
+    }
+    
+    // Add a new review via the admin panel
+    function addReview(event) {
+      event.preventDefault();
+      
+      const reviewerName = document.getElementById("reviewerName").value.trim();
+      const reviewText = document.getElementById("reviewText").value.trim();
+      const reviewRating = document.getElementById("reviewRating").value.trim();
+      const reviewImage = document.getElementById("reviewImage").value.trim(); // Optional
+      
+      if (reviewerName && reviewText && reviewRating) {
+        const newReview = {
+          id: Date.now(),
+          reviewerName,
+          reviewText,
+          reviewRating,
+          reviewImage: reviewImage || "" // Save empty string if no image provided
+        };
+        reviews.push(newReview);
+        saveReviews();
+        renderReviews();
+        document.getElementById("adminForm").reset();
+      }
+    }
+    
+    // Remove a review by its ID – only available in admin mode
+    function removeReview(id) {
+      reviews = reviews.filter(review => review.id !== id);
+      saveReviews();
+      renderReviews();
+    }
+    
+    // ----- Admin Login / Panel Functions -----
+    function openAdminLogin() {
+      document.getElementById("adminLoginModal").style.display = "flex";
+    }
+    
+    function closeAdminLogin() {
+      document.getElementById("adminLoginModal").style.display = "none";
+    }
+    
+    function handleLogin(event) {
+      event.preventDefault();
+      const codeInput = document.getElementById("adminCode").value;
+      if (codeInput === ADMIN_CODE) {
+        isAdmin = true;
+        closeAdminLogin();
+        openAdminPanel();
+        renderReviews(); // Update reviews to show remove buttons if admin is logged in
+      } else {
+        alert("Incorrect code. Access denied.");
+      }
+      document.getElementById("loginForm").reset();
+    }
+    
+    function openAdminPanel() {
+      document.getElementById("adminPanelModal").style.display = "flex";
+    }
+    
+    function closeAdminPanel() {
+      document.getElementById("adminPanelModal").style.display = "none";
+    }
+    
+    // Close modals when clicking outside the modal content
+    window.onclick = function(event) {
+      const loginModal = document.getElementById("adminLoginModal");
+      const panelModal = document.getElementById("adminPanelModal");
+      if (event.target === loginModal) {
+        loginModal.style.display = "none";
+      }
+      if (event.target === panelModal) {
+        panelModal.style.display = "none";
+      }
+    }
+    
+    // Load reviews on page load
+    window.onload = loadReviews;
+  </script>
+</body>
+</html>

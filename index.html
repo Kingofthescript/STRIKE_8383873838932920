@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Striker Marketplace</title>
+  <style>
+    /* Reset default styling */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f4;
+      color: #333;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    header h1 {
+      font-size: 3em;
+      color: #008080;
+      text-shadow: 2px 2px #ddd;
+    }
+    
+    /* Wallet Balance Section (fixed at top right) */
+    .wallet-balance {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #fff;
+      border: 2px solid #ddd;
+      padding: 10px 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 1000;
+    }
+    
+    .wallet-icon {
+      width: 24px;
+      height: 24px;
+      fill: #008080;
+    }
+    
+    /* Notification (for buy errors) */
+    .notification {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      background: #ffe6e6;
+      color: #d8000c;
+      border: 1px solid #d8000c;
+      padding: 10px 15px;
+      border-radius: 5px;
+      display: none;
+      z-index: 1100;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .notification-icon {
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    
+    .listings {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+    
+    .listing-item {
+      background: #fff;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 10px;
+      width: calc(33% - 40px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .listing-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .listing-item h2 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      color: #444;
+    }
+    
+    .listing-item p {
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    
+    .listing-item img {
+      max-width: 100%;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    
+    .listing-item .price {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #008080;
+      margin-bottom: 10px;
+    }
+    
+    /* Remove button (only for admins) */
+    .remove-btn {
+      background: #e74c3c;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      transition: background 0.3s;
+    }
+    
+    .remove-btn:hover {
+      background: #c0392b;
+    }
+    
+    /* Buy Section within each listing */
+    .buy-section {
+      margin-top: 10px;
+    }
+    
+    .buy-section input.buy-email {
+      width: calc(100% - 20px);
+      padding: 8px 10px;
+      margin-bottom: 5px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    
+    .buy-section button.buy-btn {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s;
+      width: 100%;
+    }
+    
+    .buy-section button.buy-btn:hover {
+      background: #218838;
+    }
+    
+    /* Modal (shared styles for both modals) */
+    .modal {
+      display: none; /* Hidden by default */
+      position: fixed;
+      z-index: 100;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    
+    .modal-content {
+      background: #fff;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .close-modal {
+      position: absolute;
+      right: 15px;
+      top: 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #aaa;
+      transition: color 0.3s;
+    }
+    
+    .close-modal:hover {
+      color: #333;
+    }
+    
+    /* Admin panel form styles */
+    .admin-panel h2 {
+      margin-bottom: 15px;
+      text-align: center;
+      color: #008080;
+    }
+    
+    .admin-form {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+    }
+    
+    .admin-form input,
+    .admin-form textarea {
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 1em;
+      width: calc(100% - 30px);
+      max-width: 300px;
+      transition: border-color 0.3s;
+    }
+    
+    .admin-form input:focus,
+    .admin-form textarea:focus {
+      border-color: #008080;
+      outline: none;
+    }
+    
+    .admin-form button {
+      background: #008080;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: background 0.3s;
+    }
+    
+    .admin-form button:hover {
+      background: #006666;
+    }
+    
+    /* Button Container */
+    .btn-container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .open-admin-btn, .wallet-btn, .reviews-btn {
+      background: #008080;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 10px;
+    }
+    
+    .open-admin-btn:hover, .wallet-btn:hover, .reviews-btn:hover {
+      background: #006666;
+    }
+    
+    /* Responsive design */
+    @media (max-width: 768px) {
+      .listing-item {
+        width: calc(50% - 40px);
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .listing-item {
+        width: 100%;
+        margin: 10px 0;
+      }
+      
+      .admin-form {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .admin-form input,
+      .admin-form textarea {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Wallet Balance Section -->
+  <div class="wallet-balance">
+    <span class="wallet-icon">
+      <!-- Inline SVG Wallet Icon -->
+      <svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 7H3C1.89543 7 1 7.89543 1 9V18C1 19.1046 1.89543 20 3 20H21C22.1046 20 23 19.1046 23 18V9C23 7.89543 22.1046 7 21 7ZM3 9H21L21.002 18H3V9ZM19 11H5V13H19V11ZM15 15H5V17H15V15Z"/>
+      </svg>
+    </span>
+    <span>$0.00</span>
+  </div>
+  
+  <!-- Notification for Buy -->
+  <div id="notification" class="notification">
+    <span class="notification-icon">&#9888;</span>
+    <span id="notification-message">Your Balance Is Below $1.00 , Top-up!</span>
+  </div>
+  
+  <header>
+    <h1>Striker Marketplace</h1>
+    <p>Secure, No Sign Up (Save Through Your MAC Address), On Clearnet.</p>
+  </header>
+  
+  <!-- Listings Section (starts empty) -->
+  <section class="listings" id="listings"></section>
+  
+  <!-- Button Container for Admin Panel, Wallet, and Reviews -->
+  <div class="btn-container">
+    <button class="open-admin-btn" onclick="openAdminLogin()">Refferal Panel</button>
+    <button class="wallet-btn" onclick="location.href='wallet.html'">Wallet</button>
+    <button class="reviews-btn" onclick="location.href='reviews.html'">Reviews</button>
+  </div>
+  
+  <!-- Admin Login Modal -->
+  <div class="modal" id="adminLoginModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeAdminLogin()">&times;</span>
+      <h2>Refferal Login</h2>
+      <form id="loginForm" class="admin-form" onsubmit="handleLogin(event)">
+        <input type="password" id="adminCode" placeholder="Enter Refferal Code" required />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Admin Panel Modal -->
+  <div class="modal" id="adminPanelModal">
+    <div class="modal-content">
+      <span class="close-modal" onclick="closeAdminPanel()">&times;</span>
+      <div class="admin-panel">
+        <h2>Admin Panel</h2>
+        <form id="adminForm" class="admin-form" onsubmit="addListing(event)">
+          <input type="text" id="itemTitle" placeholder="Item Title" required />
+          <textarea id="itemDescription" rows="3" placeholder="Item Description" required></textarea>
+          <input type="number" id="itemPrice" placeholder="Item Price" required step="0.01" min="0" />
+          <input type="url" id="itemImage" placeholder="Image URL" required />
+          <button type="submit">Add Listing</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Global listings array; will be loaded from localStorage if available.
+    let listings = [];
+    // Admin flag – only true after a successful admin login.
+    let isAdmin = false;
+    
+    // Load listings from localStorage on page load
+    function loadListings() {
+      const savedListings = localStorage.getItem("listings");
+      if (savedListings) {
+        listings = JSON.parse(savedListings);
+      }
+      renderListings();
+    }
+    
+    // Save listings to localStorage
+    function saveListings() {
+      localStorage.setItem("listings", JSON.stringify(listings));
+    }
+    
+    // Render all listings. Remove button only appears if isAdmin is true.
+    // Each listing now has a buy section with an email input and buy button.
+    function renderListings() {
+      const listingsContainer = document.getElementById("listings");
+      listingsContainer.innerHTML = ""; // Clear container
+    
+      listings.forEach(item => {
+        const listingDiv = document.createElement("div");
+        listingDiv.className = "listing-item";
+        listingDiv.setAttribute("data-id", item.id);
+        
+        // Build HTML content with conditional remove button
+        let html = "";
+        if (isAdmin) {
+          html += `<button class="remove-btn" onclick="removeListing(${item.id})">X</button>`;
+        }
+        html += `
+          <img src="${item.imageUrl}" alt="${item.title}" />
+          <h2>${item.title}</h2>
+          <p>${item.description}</p>
+          <p class="price">$${parseFloat(item.price).toFixed(2)}</p>
+          <div class="buy-section">
+            <input type="email" class="buy-email" placeholder="Your email (instructions sent there):" />
+            <button class="buy-btn" onclick="buyItem(${item.price}, this)">Buy for $${parseFloat(item.price).toFixed(2)}</button>
+          </div>
+        `;
+        listingDiv.innerHTML = html;
+        listingsContainer.appendChild(listingDiv);
+      });
+    }
+    
+    // Add a new listing from the admin panel
+    function addListing(event) {
+      event.preventDefault();
+      
+      const title = document.getElementById("itemTitle").value.trim();
+      const description = document.getElementById("itemDescription").value.trim();
+      const price = document.getElementById("itemPrice").value.trim();
+      const imageUrl = document.getElementById("itemImage").value.trim();
+    
+      if (title && description && price && imageUrl) {
+        // Use current timestamp as a unique ID
+        const newListing = {
+          id: Date.now(),
+          title,
+          description,
+          price,
+          imageUrl
+        };
+        listings.push(newListing);
+        saveListings();
+        renderListings();
+        
+        // Clear the form inputs
+        document.getElementById("adminForm").reset();
+      }
+    }
+    
+    // Remove a listing by its ID – only available in admin mode
+    function removeListing(id) {
+      listings = listings.filter(item => item.id !== id);
+      saveListings();
+      renderListings();
+    }
+    
+    // Function to simulate a buy action. Always shows insufficient funds notification.
+    function buyItem(price, button) {
+      // Optionally, you could retrieve the associated email:
+      const buySection = button.parentElement;
+      const emailInput = buySection.querySelector('.buy-email');
+      const email = emailInput.value.trim();
+      // For now, we do nothing with the email; just show a notification.
+      showNotification("Insufficient funds, please top-up");
+    }
+    
+    // Show a notification with a red icon for 3 seconds
+    function showNotification(message) {
+      const notification = document.getElementById("notification");
+      const messageSpan = document.getElementById("notification-message");
+      messageSpan.textContent = message;
+      notification.style.display = "flex";
+      // Hide after 3 seconds
+      setTimeout(() => {
+        notification.style.display = "none";
+      }, 3000);
+    }
+    
+    // ----- Admin Login / Panel Functions -----
+    const ADMIN_CODE = "150411";
+    
+    // Open the admin login modal
+    function openAdminLogin() {
+      document.getElementById("adminLoginModal").style.display = "flex";
+    }
+    
+    // Close the admin login modal
+    function closeAdminLogin() {
+      document.getElementById("adminLoginModal").style.display = "none";
+    }
+    
+    // Handle admin login form submission
+    function handleLogin(event) {
+      event.preventDefault();
+      const codeInput = document.getElementById("adminCode").value;
+      if (codeInput === ADMIN_CODE) {
+        isAdmin = true;  // Set admin flag to true
+        closeAdminLogin();
+        openAdminPanel();
+        renderListings();  // Re-render listings to include remove buttons
+      } else {
+        alert("Incorrect code. Access denied.");
+      }
+      // Clear the code field
+      document.getElementById("loginForm").reset();
+    }
+    
+    // Open the admin panel modal
+    function openAdminPanel() {
+      document.getElementById("adminPanelModal").style.display = "flex";
+    }
+    
+    // Close the admin panel modal
+    function closeAdminPanel() {
+      document.getElementById("adminPanelModal").style.display = "none";
+    }
+    
+    // Optional: Close modals if clicked outside the modal content
+    window.onclick = function(event) {
+      const loginModal = document.getElementById("adminLoginModal");
+      const panelModal = document.getElementById("adminPanelModal");
+      if (event.target === loginModal) {
+        loginModal.style.display = "none";
+      }
+      if (event.target === panelModal) {
+        panelModal.style.display = "none";
+      }
+    }
+    
+    // Load listings when the page loads
+    window.onload = loadListings;
+  </script>
+</body>
+</html>
